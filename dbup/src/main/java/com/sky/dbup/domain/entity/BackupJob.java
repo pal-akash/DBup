@@ -27,13 +27,13 @@ public class BackupJob {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BackupType  backupType;
+    private BackupType backupType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BackupStatus backupStatus;
+    private BackupStatus status;
 
-    private LocalDateTime scheduledTime;
+    private LocalDateTime scheduleTime;
     private LocalDateTime createdAt;
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;

@@ -3,7 +3,10 @@ package com.sky.dbup.worker.strategy;
 import com.sky.dbup.domain.entity.BackupJob;
 import com.sky.dbup.domain.entity.DatabaseConnection;
 import com.sky.dbup.domain.enums.DatabaseType;
+import com.sky.dbup.infrastructure.storage.BackupCompressionService;
+import com.sky.dbup.infrastructure.storage.BackupRetentionService;
 import com.sky.dbup.worker.BackupExecutionResult;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -11,7 +14,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Component
+@AllArgsConstructor
 public class PostgresBackupStrategy implements BackupStrategy{
+
+    private final BackupCompressionService compressionService;
+    private final BackupRetentionService retentionService;
 
     @Override
     public boolean supports(DatabaseType databaseType) {
@@ -49,7 +56,9 @@ public class PostgresBackupStrategy implements BackupStrategy{
                 );
             }
 
-            return new BackupExecutionResult(true, null, outputFile);
+            Path zipFile = compressionService.compressToZip(outputFile);
+            retentionService.enforceRetention(outputDir);
+            return new BackupExecutionResult(true, null, zipFile);
         } catch (Exception e) {
             return new BackupExecutionResult(false, e.getMessage(), null);
         }

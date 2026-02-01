@@ -39,12 +39,13 @@ public class BackupWorker {
         }
 
         BackupJob job = jobs.getFirst();
-        job.setBackupStatus(BackupStatus.RUNNING);
+        job.setStatus(BackupStatus.RUNNING);
         job.setStartedAt(LocalDateTime.now());
 
         return Optional.of(job);
     }
 
+    @Transactional
     public void executeNextJob() {
         Optional<BackupJob> optionalJob = claimNextJob();
 
@@ -59,18 +60,18 @@ public class BackupWorker {
             BackupExecutionResult  result = backupExecutor.execute(job);
 
             if(result.isSuccess()){
-                job.setBackupStatus(BackupStatus.COMPLETED);
+                job.setStatus(BackupStatus.COMPLETED);
                 job.setFinishedAt(LocalDateTime.now());
-                saveLog(job, "Backup completed successfully");
+                saveLog(job, "Backup stored at: " + result.getBackupFilePath());
             } else {
-                job.setBackupStatus(BackupStatus.FAILED);
+                job.setStatus(BackupStatus.FAILED);
                 job.setErrorMessage(result.getErrorMessage());
                 job.setFinishedAt(LocalDateTime.now());
                 saveLog(job, "Backup failed: " + result.getErrorMessage());
             }
 
         } catch (Exception ex) {
-            job.setBackupStatus(BackupStatus.FAILED);
+            job.setStatus(BackupStatus.FAILED);
             job.setErrorMessage(ex.getMessage());
             job.setFinishedAt(LocalDateTime.now());
             saveLog(job, "Unexpected error: " + ex.getMessage());
